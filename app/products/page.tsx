@@ -49,7 +49,7 @@ export default function ProductsPage() {
     }
     try {
       setSubmitting(true);
-      const res = await fetch('/API/products', {
+      const res = await fetch('http://localhost:3000/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

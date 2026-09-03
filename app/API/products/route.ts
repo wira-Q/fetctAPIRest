@@ -1,4 +1,7 @@
+// app/api/products/route.ts
+
 import { NextResponse } from 'next/server';
+
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +11,7 @@ export const dynamic = 'force-dynamic';
 // ==========================================
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://frontend-lu.vercel.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };

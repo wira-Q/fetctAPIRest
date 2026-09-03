@@ -1,6 +1,7 @@
 // app/api/products/[id]/route.ts
 
 import { NextResponse } from 'next/server';
+
 import { supabaseAdmin } from '@/lib/supabase';
 
 type Params = {
@@ -12,7 +13,7 @@ type Params = {
 // ==========================================
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://frontend-lu.vercel.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };

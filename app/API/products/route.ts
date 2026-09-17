@@ -1,7 +1,6 @@
 // app/api/products/route.ts
 
 import { NextResponse } from 'next/server';
-
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +16,7 @@ const corsHeaders = {
 };
 
 // ==========================================
-// OPTIONS: Handle CORS Preflight
+// OPTIONS
 // ==========================================
 
 export async function OPTIONS() {
@@ -28,7 +27,7 @@ export async function OPTIONS() {
 }
 
 // ==========================================
-// 1. GET: Ambil Semua Produk
+// GET: Ambil Semua Produk
 // ==========================================
 
 export async function GET() {
@@ -56,8 +55,8 @@ export async function GET() {
     return NextResponse.json(
       {
         success: true,
-        count: data ? data.length : 0,
-        data: data || [],
+        count: data?.length ?? 0,
+        data: data ?? [],
       },
       {
         status: 200,
@@ -79,19 +78,19 @@ export async function GET() {
 }
 
 // ==========================================
-// 2. POST: Tambah Produk Baru
+// POST: Tambah Banyak Produk Sekaligus
 // ==========================================
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Validasi data sederhana di level Gateway
-    if (!body.name || typeof body.price !== 'number') {
+    // Harus berupa array
+    if (!Array.isArray(body)) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Field "name" (string) dan "price" (number) wajib diisi!',
+          message: 'Body harus berupa array JSON',
         },
         {
           status: 400,
@@ -100,15 +99,52 @@ export async function POST(request: Request) {
       );
     }
 
+    // Cek array tidak kosong
+    if (body.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Data tidak boleh kosong',
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    // Validasi setiap produk
+    for (let i = 0; i < body.length; i++) {
+      const product = body[i];
+
+      if (
+        typeof product.name !== 'string' ||
+        product.name.trim() === '' ||
+        typeof product.price !== 'number' ||
+        typeof product.stock !== 'number'
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Data pada index ${i} tidak valid`,
+            detail: {
+              name: 'harus string',
+              price: 'harus number',
+              stock: 'harus number',
+            },
+          },
+          {
+            status: 400,
+            headers: corsHeaders,
+          }
+        );
+      }
+    }
+
+    // INSERT 300 data sekaligus
     const { data, error } = await supabaseAdmin
       .from('Products')
-      .insert([
-        {
-          name: body.name,
-          price: body.price,
-          stock: body.stock ?? 0,
-        },
-      ])
+      .insert(body)
       .select();
 
     if (error) {
@@ -117,6 +153,9 @@ export async function POST(request: Request) {
           success: false,
           message: 'Gagal menambah data ke Supabase',
           error_message: error.message,
+          error_code: error.code,
+          error_details: error.details,
+          error_hint: error.hint,
         },
         {
           status: 400,
@@ -128,8 +167,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: 'Produk berhasil dibuat!',
-        data: data[0],
+        message: `${data?.length ?? 0} produk berhasil ditambahkan!`,
+        count: data?.length ?? 0,
+        data: data ?? [],
       },
       {
         status: 201,
@@ -140,6 +180,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
+        message: 'Request tidak valid',
         error: err?.message || 'Invalid JSON request body',
       },
       {
